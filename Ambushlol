@@ -1,0 +1,73 @@
+local plr = game.Players.LocalPlayer
+local chr = plr.Character or plr.CharacterAdded:Wait()
+local TweenService = game:GetService("TweenService")
+local hum = chr:FindFirstChild("Humanoid")
+local Move = true 
+
+local s = game:GetObjects("rbxassetid://12798153305")[1]
+s.Parent = workspace
+local primary_part = s:FindFirstChildWhichIsA("BasePart") or s:FindFirstChildWhichIsA("Part")
+entity = primary_part
+entity.CFrame = chr.HumanoidRootPart.CFrame * CFrame.new(0, 0, 20)
+entity.CanCollide = false
+entity.Anchored = true
+
+local function Moving(target, dur)
+    local tween_info = TweenInfo.new(dur, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local tween = TweenService:Create(entity, tween_info, {CFrame = target})
+    tween:Play()
+    tween.Completed:Wait()
+end
+
+wait(5)
+task.spawn(function()
+while Move == true do
+wait(0)
+Moving(chr.HumanoidRootPart.CFrame, 2)
+end
+end)
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local HumanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+local death = true
+
+spawn(function()
+while task.wait() do
+if death == true then
+
+local monster = entity
+local target = HumanoidRootPart
+local origin = monster.Position
+local direction = (target.Position - origin).Unit
+local ray = Ray.new(origin, direction * 3)
+local raycast = workspace:Raycast(ray.Origin, ray.Direction)
+
+if raycast and raycast.Instance.Parent == character then
+if not character:GetAttribute("Hiding") then
+
+game.Players.LocalPlayer.Character.Humanoid:TakeDamage(100)
+game:GetService("ReplicatedStorage").GameStats["Player_".. game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Ambushlol"
+
+end
+end
+
+end
+end
+end)
+
+wait(30)
+Move = false
+Moving(entity.CFrame * CFrame.new(0, -100, 0), 3)
+wait(3)
+s:Destroy()
+local achievementGiver = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Doors/Custom%20Achievements/Source.lua"))()
+
+---====== Display achievement ======---
+achievementGiver({
+    Title = "Ambushloler fear",
+    Desc = "Wine to chase away the remnants.",
+    Reason = "Encounter ambushlol",
+    Image = "rbxassetid://111233379255553"
+})
