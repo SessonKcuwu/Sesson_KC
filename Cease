@@ -1,0 +1,73 @@
+local Lighting = game:GetService("Lighting")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+-- Phòng hiện tại
+local currentRoom = ReplicatedStorage.GameData.LatestRoom.Value
+if game.Workspace:FindFirstChild("SeekMovingNewClone") or
+   currentRoom == 50 or currentRoom == 100 or
+   (currentRoom >= 90 and currentRoom <= 100) then
+    return
+end
+
+-- Load entity
+local entity = game:GetObjects("rbxassetid://122028884388737")[1]
+local part = entity:FindFirstChildWhichIsA("BasePart")
+entity.Parent = workspace
+
+-- Chuyển đèn phòng thành màu xanh (đặc trưng Cease)
+local originalAmbient = Lighting.Ambient
+Lighting.Ambient = Color3.fromRGB(100, 150, 255)
+
+-- Spawn entity ở phòng hiện tại, cao hơn sàn một chút
+local roomFolder = workspace.CurrentRooms:FindFirstChild(tostring(currentRoom))
+if not roomFolder or not roomFolder.Parts.Floor then
+    warn("Không tìm thấy phòng hiện tại hoặc sàn.")
+    entity:Destroy()
+    Lighting.Ambient = originalAmbient
+    return
+end
+part.CFrame = roomFolder.Parts.Floor.CFrame + Vector3.new(0, 2, 0)
+
+-- Người chơi phải giữ yên
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
+local humanoid = character:WaitForChild("Humanoid")
+
+local lastPos = hrp.Position
+local alive = true
+
+-- Kiểm tra chuyển động
+local conn
+conn = RunService.Heartbeat:Connect(function()
+    if not alive then return end
+    if (hrp.Position - lastPos).Magnitude > 0.5 then
+        alive = false
+        humanoid.Health = 0
+        firesignal(ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent, {
+            "bla bla",
+            "Bla bla"
+        }, "Blue")
+    end
+    lastPos = hrp.Position
+end)
+
+-- Cease tồn tại một khoảng thời gian (5–7 giây)
+task.delay(15, function()
+    if alive then
+        alive = false
+    end
+    conn:Disconnect()
+    entity:Destroy()
+    Lighting.Ambient = originalAmbient
+end)
+local achievementGiver = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Doors/Custom%20Achievements/Source.lua"))()
+
+---====== Display achievement ======---
+achievementGiver({
+    Title = "Bad gazer",
+    Desc = "Do you have courage.",
+    Reason = "Encounter gaze",
+    Image = "rbxassetid://125061951831219"
+})
